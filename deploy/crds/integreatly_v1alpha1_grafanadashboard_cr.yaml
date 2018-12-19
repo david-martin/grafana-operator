@@ -1,7 +1,7 @@
 apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDashboard
 metadata:
-  name: example-grafanadashboard
+  name: example-grafanadashboard6
 spec:
   # Add fields here
   name: "keycloak.json"
@@ -149,7 +149,7 @@ spec:
       ]
     },
     "timezone": "",
-    "title": "Keycloak",
+    "title": "Keycloak Dashboard",
     "uid": "sRye4Zsiz",
     "version": 2
     }

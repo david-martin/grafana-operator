@@ -144,6 +144,7 @@ func (r *ReconcileGrafanaDashboard) UpdateGrafanaConfigMap(cr *integreatlyv1alph
 	err = r.client.Get(context.TODO(), selector, &resource)
 	if err != nil {
 		if errors.IsNotFound(err) {
+			log.Info("No grafana dashboards config map found")
 			r.client.Create(context.TODO(), &resource)
 			log.Info("New grafana dashboards config map created")
 		} else {

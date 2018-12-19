@@ -39,7 +39,7 @@ func main() {
 	printVersion()
 
 	// namespace, err := k8sutil.GetWatchNamespace()
-	namespace := "rhsso"
+	namespace := "grafana-tests"
 	/*
 	if err != nil {
 		log.Error(err, "failed to get watch namespace")

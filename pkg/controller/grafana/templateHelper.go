@@ -1,0 +1,94 @@
+package grafana
+
+import (
+	"bytes"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"text/template"
+
+	integreatlyv1alpha1 "github.com/integr8ly/grafana-operator/pkg/apis/integreatly/v1alpha1"
+)
+
+const (
+	GrafanaImage                    = "registry.access.redhat.com/openshift3/grafana"
+	GrafanaVersion                  = "v3.11"
+	LogLevel                        = "error"
+	GrafanaConfigMapName            = "grafana-config"
+	GrafanaProvidersConfigMapName   = "grafana-providers"
+	GrafanaDatasourcesConfigMapName = "grafana-datasources"
+	GrafanaDashboardsConfigMapName  = "grafana-dashboards"
+	GrafanaServiceAccountName       = "grafana-serviceaccount"
+	GrafanaDeploymentName           = "grafana-deployment"
+)
+
+type GrafanaParamaeters struct {
+	GrafanaImage                    string
+	GrafanaVersion                  string
+	Namespace                       string
+	GrafanaConfigMapName            string
+	GrafanaProvidersConfigMapName   string
+	GrafanaDatasourcesConfigMapName string
+	PrometheusUrl                   string
+	GrafanaDashboardsConfigMapName  string
+	GrafanaServiceAccountName       string
+	GrafanaDeploymentName           string
+	LogLevel                        string
+}
+
+type GrafanaTemplateHelper struct {
+	Parameters   GrafanaParamaeters
+	TemplatePath string
+}
+
+// Creates a new templates helper and populates the values for all
+// templates properties. Some of them (like the hostname) are set
+// by the user in the custom resource
+func newTemplateHelper(cr *integreatlyv1alpha1.Grafana) *GrafanaTemplateHelper {
+	param := GrafanaParamaeters{
+		GrafanaImage:                    GrafanaImage,
+		GrafanaVersion:                  GrafanaVersion,
+		Namespace:                       cr.Namespace,
+		GrafanaConfigMapName:            GrafanaConfigMapName,
+		GrafanaProvidersConfigMapName:   GrafanaProvidersConfigMapName,
+		GrafanaDatasourcesConfigMapName: GrafanaDatasourcesConfigMapName,
+		PrometheusUrl:                   cr.Spec.PrometheusUrl,
+		GrafanaDashboardsConfigMapName:  GrafanaDashboardsConfigMapName,
+		GrafanaServiceAccountName:       GrafanaServiceAccountName,
+		GrafanaDeploymentName:           GrafanaDeploymentName,
+		LogLevel:                        LogLevel,
+	}
+
+	templatePath := os.Getenv("TEMPLATE_PATH")
+	if templatePath == "" {
+		templatePath = "./templates"
+	}
+
+	return &GrafanaTemplateHelper{
+		Parameters:   param,
+		TemplatePath: templatePath,
+	}
+}
+
+// load a templates from a given resource name. The templates must be located
+// under ./templates and the filename must be <resource-name>.yaml
+func (h *GrafanaTemplateHelper) loadTemplate(name string) ([]byte, error) {
+	path := fmt.Sprintf("%s/%s.yaml", h.TemplatePath, name)
+	tpl, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	parsed, err := template.New("grafana").Parse(string(tpl))
+	if err != nil {
+		return nil, err
+	}
+
+	var buffer bytes.Buffer
+	err = parsed.Execute(&buffer, h.Parameters)
+	if err != nil {
+		return nil, err
+	}
+
+	return buffer.Bytes(), nil
+}

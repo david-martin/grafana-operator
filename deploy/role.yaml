@@ -36,5 +36,6 @@ rules:
   - integreatly.org
   resources:
   - '*'
+  - grafanas
   verbs:
   - '*'
