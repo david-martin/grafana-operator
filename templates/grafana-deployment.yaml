@@ -49,6 +49,24 @@ spec:
               name: grafana-logs
             - mountPath: /etc/grafana/
               name: {{ .GrafanaConfigMapName }}
+        - args:
+            - '-provider=openshift'
+            - '-https-address='
+            - '-http-address=0.0.0.0:3001'
+            - '-openshift-service-account={{ .GrafanaServiceAccountName }}'
+            - '-upstream=http://localhost:3000'
+            - '-cookie-secret=SECRET'
+            - '-skip-auth-regex=^/metrics'
+          image: 'registry.redhat.io/openshift3/oauth-proxy:v3.11.16'
+          imagePullPolicy: IfNotPresent
+          name: grafana-proxy
+          ports:
+            - containerPort: 3001
+              name: grafana-proxy
+              protocol: TCP
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler

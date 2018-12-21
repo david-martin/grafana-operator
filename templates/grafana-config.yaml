@@ -5,7 +5,7 @@ data:
     data = /var/lib/grafana
     logs = /var/log/grafana
     plugins = /var/lib/grafana/plugins
-    provisioning = /etc/grafana/conf/provisioning
+    provisioning = /etc/grafana/provisioning
 
     [log]
     # Either "console", "file", "syslog". Default is console and  file

@@ -39,12 +39,12 @@ func main() {
 	printVersion()
 
 	// namespace, err := k8sutil.GetWatchNamespace()
-	namespace := "grafana-tests"
+	namespace := ""
 	/*
-	if err != nil {
-		log.Error(err, "failed to get watch namespace")
-		os.Exit(1)
-	}
+		if err != nil {
+			log.Error(err, "failed to get watch namespace")
+			os.Exit(1)
+		}
 	*/
 
 	// Get a config to talk to the apiserver
