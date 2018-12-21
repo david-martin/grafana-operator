@@ -20,6 +20,8 @@ const (
 	GrafanaDashboardsConfigMapName  = "grafana-dashboards"
 	GrafanaServiceAccountName       = "grafana-serviceaccount"
 	GrafanaDeploymentName           = "grafana-deployment"
+	GrafanaRouteName                = "grafana-route"
+	GrafanaServiceName              = "grafana-service"
 )
 
 type GrafanaParamaeters struct {

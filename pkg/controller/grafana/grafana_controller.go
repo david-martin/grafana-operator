@@ -3,9 +3,12 @@ package grafana
 import (
 	"context"
 
+	"fmt"
+
 	integreatlyv1alpha1 "github.com/integr8ly/grafana-operator/pkg/apis/integreatly/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -16,9 +19,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"fmt"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
-
 )
 
 var log = logf.Log.WithName("controller_grafana")
@@ -124,7 +124,7 @@ func (r *ReconcileGrafana) Reconcile(request reconcile.Request) (reconcile.Resul
 func (r *ReconcileGrafana) CreateConfigFiles(cr *integreatlyv1alpha1.Grafana) (reconcile.Result, error) {
 	log.Info("Phase: Create Config Files")
 
-	for _, resourceName := range []string{GrafanaServiceAccountName,GrafanaConfigMapName, GrafanaDashboardsConfigMapName, GrafanaProvidersConfigMapName, GrafanaDatasourcesConfigMapName} {
+	for _, resourceName := range []string{GrafanaServiceAccountName, GrafanaConfigMapName, GrafanaDashboardsConfigMapName, GrafanaProvidersConfigMapName, GrafanaDatasourcesConfigMapName, GrafanaRouteName, GrafanaServiceName} {
 		if err := r.CreateResource(cr, resourceName); err != nil {
 			log.Info("Error in CreateConfigFiles, resourceName=%s : err=%s", resourceName, err)
 			// Requeue so it can be attempted again
@@ -148,7 +148,6 @@ func (r *ReconcileGrafana) InstallGrafana(cr *integreatlyv1alpha1.Grafana) (reco
 
 	return reconcile.Result{Requeue: true}, r.UpdatePhase(cr, PhaseInstallGrafana)
 }
-
 
 func (r *ReconcileGrafana) UpdatePhase(cr *integreatlyv1alpha1.Grafana, phase int) error {
 	cr.Status.Phase = phase
