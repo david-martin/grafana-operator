@@ -2,6 +2,7 @@ package grafana
 
 import (
 	"context"
+	"time"
 
 	"fmt"
 
@@ -42,7 +43,13 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileGrafana{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+
+
+	return &ReconcileGrafana{
+		client: mgr.GetClient(),
+		scheme: mgr.GetScheme(),
+		helper: newKubeHelper(),
+	}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -80,6 +87,7 @@ type ReconcileGrafana struct {
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
 	scheme *runtime.Scheme
+	helper *KubeHelperImpl
 }
 
 // Reconcile reads that state of the cluster for a Grafana object and makes changes based on the state read
@@ -115,10 +123,26 @@ func (r *ReconcileGrafana) Reconcile(request reconcile.Request) (reconcile.Resul
 	case PhaseInstallGrafana:
 		return r.InstallGrafana(instanceCopy)
 	case PhaseDone:
-		log.Info("Grafana installation complete")
+		return r.ReconcileNamespaces(instanceCopy)
 	}
 
-	return reconcile.Result{}, nil
+	return reconcile.Result{RequeueAfter: time.Second * 10}, nil
+}
+
+func (r *ReconcileGrafana) ReconcileNamespaces(cr *integreatlyv1alpha1.Grafana) (reconcile.Result, error) {
+	namespaces, err := r.helper.getMonitoringNamespaces()
+	if err != nil {
+		log.Error(err, "Error listing namespaces")
+		return reconcile.Result{}, err
+	}
+
+	if len(namespaces) >= 1 {
+		r.helper.getNamespaceDashboards("test")
+	} else {
+		log.Info("No monitoring namespaces, nothing to do")
+	}
+
+	return reconcile.Result{RequeueAfter: time.Second * 10}, nil
 }
 
 func (r *ReconcileGrafana) CreateConfigFiles(cr *integreatlyv1alpha1.Grafana) (reconcile.Result, error) {
