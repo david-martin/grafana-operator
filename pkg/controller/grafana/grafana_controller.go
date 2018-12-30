@@ -124,9 +124,9 @@ func (r *ReconcileGrafana) Reconcile(request reconcile.Request) (reconcile.Resul
 func (r *ReconcileGrafana) CreateConfigFiles(cr *integreatlyv1alpha1.Grafana) (reconcile.Result, error) {
 	log.Info("Phase: Create Config Files")
 
-	for _, resourceName := range []string{GrafanaServiceAccountName, GrafanaConfigMapName, GrafanaDashboardsConfigMapName, GrafanaProvidersConfigMapName, GrafanaDatasourcesConfigMapName, GrafanaRouteName, GrafanaServiceName} {
+	for _, resourceName := range []string{GrafanaServiceAccountName, GrafanaConfigMapName, GrafanaDashboardsConfigMapName, GrafanaProvidersConfigMapName, GrafanaDatasourcesConfigMapName, GrafanaServiceName, GrafanaRouteName} {
 		if err := r.CreateResource(cr, resourceName); err != nil {
-			log.Info("Error in CreateConfigFiles, resourceName=%s : err=%s", resourceName, err)
+			log.Info(fmt.Sprintf("Error in CreateConfigFiles, resourceName=%s : err=%s", resourceName, err))
 			// Requeue so it can be attempted again
 			return reconcile.Result{Requeue: true}, err
 		}
@@ -140,13 +140,13 @@ func (r *ReconcileGrafana) InstallGrafana(cr *integreatlyv1alpha1.Grafana) (reco
 
 	for _, resourceName := range []string{GrafanaDeploymentName} {
 		if err := r.CreateResource(cr, resourceName); err != nil {
-			log.Info("Error in InstallGrafana, resourceName=%s : err=%s", resourceName, err)
+			log.Info(fmt.Sprintf("Error in InstallGrafana, resourceName=%s : err=%s", resourceName, err))
 			// Requeue so it can be attempted again
 			return reconcile.Result{Requeue: true}, err
 		}
 	}
 
-	return reconcile.Result{Requeue: true}, r.UpdatePhase(cr, PhaseInstallGrafana)
+	return reconcile.Result{Requeue: true}, r.UpdatePhase(cr, PhaseDone)
 }
 
 func (r *ReconcileGrafana) UpdatePhase(cr *integreatlyv1alpha1.Grafana, phase int) error {
@@ -160,7 +160,7 @@ func (r *ReconcileGrafana) CreateResource(cr *integreatlyv1alpha1.Grafana, resou
 	resource, err := resourceHelper.createResource(resourceName)
 
 	if err != nil {
-		return fmt.Errorf("Error parsing templates: %s", err)
+		return err
 	}
 
 	// Try to find the resource, it may already exist
@@ -177,21 +177,21 @@ func (r *ReconcileGrafana) CreateResource(cr *integreatlyv1alpha1.Grafana, resou
 
 	// Resource does not exist or something went wrong
 	if errors.IsNotFound(err) {
-		log.Info("Resource '%s' is missing. Creating it.", resourceName)
+		log.Info(fmt.Sprintf("Creating %s", resourceName))
 	} else {
-		return fmt.Errorf("Error reading resource '%s': %s", resourceName, err)
+		return err
 	}
 
 	// Set the CR as the owner of this resource so that when
 	// the CR is deleted this resource also gets removed
 	err = controllerutil.SetControllerReference(cr, resource.(v1.Object), r.scheme)
 	if err != nil {
-		return fmt.Errorf("Error setting the custom resource as owner: %s", err)
+		return err
 	}
 
 	err = r.client.Create(context.TODO(), resource)
 	if err != nil {
-		return fmt.Errorf("Error creating resource: %s", err)
+		return err
 	}
 	return nil
 }

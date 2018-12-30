@@ -33,9 +33,22 @@ rules:
   - get
   - create
 - apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  - routes/custom-host
+  verbs:
+  - '*'
+- apiGroups:
   - integreatly.org
   resources:
   - '*'
   - grafanas
+  verbs:
+  - '*'
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses
   verbs:
   - '*'

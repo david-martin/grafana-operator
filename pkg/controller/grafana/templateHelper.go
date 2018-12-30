@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	GrafanaImage                    = "registry.access.redhat.com/openshift3/grafana"
-	GrafanaVersion                  = "v3.11"
+	GrafanaImage                    = "docker.io/grafana/grafana"
+	GrafanaVersion                  = "5.4.2"
 	LogLevel                        = "error"
 	GrafanaConfigMapName            = "grafana-config"
 	GrafanaProvidersConfigMapName   = "grafana-providers"
