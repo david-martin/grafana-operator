@@ -5,8 +5,9 @@ data:
       org_id: 1
       folder: ''
       type: file
+      updateIntervalSeconds: 10
       options:
-        folder: /etc/grafana-dashboards
+        path: /etc/grafana-dashboards
 kind: ConfigMap
 metadata:
   name: {{ .GrafanaProvidersConfigMapName }}

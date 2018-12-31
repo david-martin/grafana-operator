@@ -137,12 +137,38 @@ func (r *ReconcileGrafana) ReconcileNamespaces(cr *integreatlyv1alpha1.Grafana) 
 	}
 
 	if len(namespaces) >= 1 {
-		r.helper.getNamespaceDashboards("test")
+		for _, ns := range namespaces {
+			log.Info(fmt.Sprintf("Checking namespace %s", ns.Name))
+			dashboards, err := r.helper.getNamespaceDashboards(ns.Name)
+
+			if err != nil {
+				log.Error(err, "Error listing dashboards in namespace")
+			} else {
+				if len(dashboards.Items) >= 1 {
+					for _, d := range dashboards.Items {
+						r.ReconcileDashboards(cr.Namespace, d)
+					}
+				}
+			}
+		}
 	} else {
 		log.Info("No monitoring namespaces, nothing to do")
 	}
 
 	return reconcile.Result{RequeueAfter: time.Second * 10}, nil
+}
+
+func (r *ReconcileGrafana) ReconcileDashboards(monitoringNamespace string, d integreatlyv1alpha1.GrafanaDashboard) {
+	if d.Status.Created {
+		log.Info(fmt.Sprintf("Dashboard %s already created", d.Name))
+		return
+	}
+
+	log.Info(fmt.Sprintf("Reconciling dashboard: %s", d.Name))
+	err := r.helper.updateDashboard(monitoringNamespace, d.Namespace, &d)
+	if err != nil {
+		log.Error(err, "Error updating dashboard config")
+	}
 }
 
 func (r *ReconcileGrafana) CreateConfigFiles(cr *integreatlyv1alpha1.Grafana) (reconcile.Result, error) {

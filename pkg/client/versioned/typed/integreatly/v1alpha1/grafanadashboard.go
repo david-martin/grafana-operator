@@ -13,6 +13,7 @@ type GrafanaDashboardsGetter interface {
 
 type GrafanaDashboardInterface interface {
 	List(opts metav1.ListOptions) (*v1alpha1.GrafanaDashboardList, error)
+	Update(dashboard *v1alpha1.GrafanaDashboard) (result *v1alpha1.GrafanaDashboard, err error)
 }
 
 type grafanadashboards struct {
@@ -33,6 +34,18 @@ func (c *grafanadashboards) List(opts metav1.ListOptions) (result *v1alpha1.Graf
 		Namespace(c.ns).
 		Resource("grafanadashboards").
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Do().
+		Into(result)
+	return
+}
+
+func (c *grafanadashboards) Update(dashboard *v1alpha1.GrafanaDashboard) (result *v1alpha1.GrafanaDashboard, err error) {
+	result = &v1alpha1.GrafanaDashboard{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("grafanadashboards").
+		Name(dashboard.Name).
+		Body(dashboard).
 		Do().
 		Into(result)
 	return
